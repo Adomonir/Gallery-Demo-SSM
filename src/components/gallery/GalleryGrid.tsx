@@ -209,25 +209,149 @@ export function GalleryGrid({
         </div>
       )}
 
-      {/* Photo Detail Modal - Placeholder for future implementation */}
+      {/* Photo Detail Modal */}
       {selectedPhoto && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">{selectedPhoto.title}</h2>
-                <button
-                  onClick={() => setSelectedPhoto(null)}
-                  className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="text-slate-600 dark:text-slate-400">
-                Photo details and larger view would be implemented here.
-              </p>
+        <div 
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedPhoto(null)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-slate-800 rounded-xl max-w-5xl w-full max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between z-10">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                {selectedPhoto.title}
+              </h2>
+              <button
+                onClick={() => setSelectedPhoto(null)}
+                className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                aria-label="Close modal"
+              >
+                <span className="text-2xl">✕</span>
+              </button>
             </div>
-          </div>
+
+            <div className="p-6">
+              {/* Large Photo Display */}
+              <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
+                <div 
+                  className={`w-full h-full ${
+                    mockPhotos.findIndex(p => p.id === selectedPhoto.id) % 6 === 0 ? 'bg-gradient-to-br from-blue-400 to-blue-600' :
+                    mockPhotos.findIndex(p => p.id === selectedPhoto.id) % 6 === 1 ? 'bg-gradient-to-br from-green-400 to-green-600' :
+                    mockPhotos.findIndex(p => p.id === selectedPhoto.id) % 6 === 2 ? 'bg-gradient-to-br from-purple-400 to-purple-600' :
+                    mockPhotos.findIndex(p => p.id === selectedPhoto.id) % 6 === 3 ? 'bg-gradient-to-br from-pink-400 to-pink-600' :
+                    mockPhotos.findIndex(p => p.id === selectedPhoto.id) % 6 === 4 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
+                    'bg-gradient-to-br from-red-400 to-red-600'
+                  }`}
+                />
+              </div>
+
+              {/* Photo Info and Actions */}
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* Left Column - Details */}
+                <div className="md:col-span-2 space-y-6">
+                  {/* Photographer */}
+                  {selectedPhoto.photographer && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">
+                        Photographer
+                      </h3>
+                      <p className="text-lg text-slate-900 dark:text-white">
+                        {selectedPhoto.photographer}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Tags */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
+                      Tags
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedPhoto.tags.map(tag => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm rounded-full"
+                        >
+                          <Tag className="h-3.5 w-3.5" />
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
+                      Statistics
+                    </h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
+                          <Heart className="h-4 w-4" />
+                          <span className="text-sm">Likes</span>
+                        </div>
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                          {selectedPhoto.likes + (likedPhotos.has(selectedPhoto.id) ? 1 : 0)}
+                        </p>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
+                          <Eye className="h-4 w-4" />
+                          <span className="text-sm">Views</span>
+                        </div>
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                          {selectedPhoto.views}
+                        </p>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4">
+                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-1">
+                          <Download className="h-4 w-4" />
+                          <span className="text-sm">Downloads</span>
+                        </div>
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                          {selectedPhoto.downloads}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Actions */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                    Actions
+                  </h3>
+                  
+                  <button
+                    onClick={() => toggleLike(selectedPhoto.id)}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                      likedPhotos.has(selectedPhoto.id)
+                        ? 'bg-red-500 text-white hover:bg-red-600'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    <Heart className={`h-5 w-5 ${likedPhotos.has(selectedPhoto.id) ? 'fill-current' : ''}`} />
+                    {likedPhotos.has(selectedPhoto.id) ? 'Unlike' : 'Like'}
+                  </button>
+
+                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                    <Download className="h-5 w-5" />
+                    Download
+                  </button>
+
+                  <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                    <Share2 className="h-5 w-5" />
+                    Share
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>
