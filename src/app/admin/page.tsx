@@ -1,9 +1,44 @@
-import { Users, Plus, Eye, Edit, Trash2, Settings } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { Users, Plus, Settings, X } from "lucide-react";
 import Link from "next/link";
-import { Hero, SectionContainer, SectionTitle, FeatureCard, StatsGrid } from "@/components/ui";
+import {
+  Hero,
+  SectionContainer,
+  SectionTitle,
+  FeatureCard,
+  StatsGrid,
+  RecentGalleriesTable,
+  CreateGalleryForm,
+} from "@/components/ui";
 import { dashboardStats, recentGalleries } from "@/lib/mock-admin-data";
+import { createGallery, CreateGalleryPayload } from "@/lib/gallery-create-contract";
 
 export default function AdminPage() {
+  const [galleries, setGalleries] = useState(recentGalleries);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleCreateGallery = async (payload: CreateGalleryPayload) => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    const result = await createGallery(payload);
+
+    if (!result.success || !result.gallery) {
+      setSubmitError(result.error ?? "Unable to create gallery right now.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    setGalleries((prev) => [result.gallery, ...prev]);
+    setIsSubmitting(false);
+    setIsCreateOpen(false);
+  };
+
   return (
     <div className="page-gradient">
       <Hero
@@ -12,6 +47,45 @@ export default function AdminPage() {
       />
       
       <SectionContainer>
+        <div className="flex justify-end mb-6">
+          <Dialog.Root open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <Dialog.Trigger asChild>
+              <button className="btn-primary flex items-center gap-2" type="button">
+                <Plus className="h-4 w-4" />
+                New Gallery
+              </button>
+            </Dialog.Trigger>
+
+            <Dialog.Portal>
+              <Dialog.Overlay className="fixed inset-0 bg-black/60 z-40" />
+              <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-3xl max-h-[90vh] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-xl bg-white dark:bg-slate-900 p-6 shadow-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <Dialog.Title className="text-2xl font-bold text-slate-900 dark:text-white">
+                    Create New Gallery
+                  </Dialog.Title>
+                  <Dialog.Close asChild>
+                    <button type="button" className="btn-icon" aria-label="Close create gallery modal">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </Dialog.Close>
+                </div>
+
+                {submitError && (
+                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-3" role="alert">
+                    {submitError}
+                  </div>
+                )}
+
+                <CreateGalleryForm
+                  isSubmitting={isSubmitting}
+                  onSubmit={handleCreateGallery}
+                  onCancel={() => setIsCreateOpen(false)}
+                />
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
+        </div>
+
         {/* Stats Grid */}
         <SectionTitle title="Stats Overview" className="mb-6" />
         <StatsGrid stats={dashboardStats} />
@@ -45,89 +119,7 @@ export default function AdminPage() {
 
         {/* Galleries Table */}
         <SectionTitle title="Recent Galleries" viewAllLink="/admin/galleries" />
-        <div className="card-base overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 dark:bg-slate-700">
-                <tr>
-                  <th className="text-left py-3 px-6 font-medium text-slate-700 dark:text-slate-300">
-                    Gallery Name
-                  </th>
-                  <th className="text-left py-3 px-6 font-medium text-slate-700 dark:text-slate-300">
-                    Type
-                  </th>
-                  <th className="text-left py-3 px-6 font-medium text-slate-700 dark:text-slate-300">
-                    Photos
-                  </th>
-                  <th className="text-left py-3 px-6 font-medium text-slate-700 dark:text-slate-300">
-                    Views
-                  </th>
-                  <th className="text-left py-3 px-6 font-medium text-slate-700 dark:text-slate-300">
-                    Status
-                  </th>
-                  <th className="text-left py-3 px-6 font-medium text-slate-700 dark:text-slate-300">
-                    Last Updated
-                  </th>
-                  <th className="text-left py-3 px-6 font-medium text-slate-700 dark:text-slate-300">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentGalleries.map((gallery) => (
-                  <tr key={gallery.id} className="table-row">
-                    <td className="py-4 px-6">
-                      <div className="font-medium text-slate-900 dark:text-white">
-                        {gallery.name}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className={`status-badge ${
-                        gallery.type === 'Client Review' ? 'status-private' :
-                        gallery.type === 'Public' ? 'status-active' :
-                        gallery.type === 'Portfolio' ? 'status-private' :
-                        'status-draft'
-                      }`}>
-                        {gallery.type}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-slate-600 dark:text-slate-400">
-                      {gallery.photos}
-                    </td>
-                    <td className="py-4 px-6 text-slate-600 dark:text-slate-400">
-                      {gallery.views.toLocaleString()}
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className={`status-badge ${
-                        gallery.status === 'Active' || gallery.status === 'Published' 
-                          ? 'status-active'
-                          : 'status-draft'
-                      }`}>
-                        {gallery.status}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-slate-600 dark:text-slate-400">
-                      {gallery.lastUpdated}
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-2">
-                        <button className="btn-icon">
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button className="btn-icon btn-icon-success">
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button className="btn-icon btn-icon-danger">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <RecentGalleriesTable galleries={galleries} />
       </SectionContainer>
     </div>
   );
